@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches-ignore: [main]
+    branches-ignore: [main, claude/confident-carson-lx509q]
 
 jobs:
   test:

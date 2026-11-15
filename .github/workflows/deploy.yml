@@ -2,7 +2,9 @@ name: Desplegar en GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # main es la rama habitual; se incluye también la rama de desarrollo actual
+    # mientras no exista main en el repositorio.
+    branches: [main, claude/confident-carson-lx509q]
   workflow_dispatch:
 
 permissions:
