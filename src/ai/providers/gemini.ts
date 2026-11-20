@@ -70,10 +70,12 @@ export function mapGeminiError(status: number, body: unknown, modelId: string): 
   if (status === 400) {
     return new AIError('image_rejected', `La petición fue rechazada: ${raw || 'formato no válido'}.`, { status });
   }
+  // Se muestra el código y el mensaje de Google (sin secretos) para poder diagnosticar.
+  const detail = ` [Google: ${status}${err?.status ? ` ${err.status}` : ''}${raw ? ` — ${raw.slice(0, 200)}` : ''}]`;
   if (status >= 500) {
-    return new AIError('server', 'El servicio de Gemini no está disponible en este momento. Reinténtalo en unos minutos.', { status, retryable: true });
+    return new AIError('server', `El servicio de Gemini no está disponible en este momento. Reinténtalo en unos minutos o prueba otro modelo.${detail}`, { status, retryable: true });
   }
-  return new AIError('server', `Error inesperado de Gemini (${status}).`, { status });
+  return new AIError('server', `Error inesperado de Gemini (${status}).${detail}`, { status });
 }
 
 export class GeminiProvider implements AIProvider {

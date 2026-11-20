@@ -241,6 +241,14 @@ describe('Errores del proveedor', () => {
     expect(noFree.message).toMatch(/no tiene cuota gratuita/);
   });
 
+  it('error 503 de Google: muestra el código y el mensaje de Google sin secretos', () => {
+    const e = mapGeminiError(503, { error: { code: 503, status: 'UNAVAILABLE', message: 'The model is overloaded. key=AIzaSyTEST_key_for_unit_tests_000000000' } }, 'gemini-3.8-flash');
+    expect(e.code).toBe('server');
+    expect(e.message).toMatch(/503 UNAVAILABLE/);
+    expect(e.message).toMatch(/overloaded/);
+    expect(e.message).not.toContain('AIzaSyTEST');
+  });
+
   it('12. Error de red', async () => {
     await expect(provider(async () => Promise.reject(new TypeError('Failed to fetch'))).analyze(IMG)).rejects.toMatchObject({ code: 'network' });
   });
