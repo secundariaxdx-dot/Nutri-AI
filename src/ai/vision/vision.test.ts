@@ -271,6 +271,7 @@ describe('Errores del proveedor', () => {
     const e = new AIError('server', `fallo con clave ${KEY} y url https://x?key=${KEY}`);
     expect(e.message).not.toContain(KEY);
     expect(redactSecrets('api-key=abc&x=1')).toBe('api-key=[oculto]&x=1');
+    expect(redactSecrets('error con AQ.FakeKeyForTestsOnly_0123456789abcdef fin')).toBe('error con AQ.…[oculto] fin');
   });
 });
 

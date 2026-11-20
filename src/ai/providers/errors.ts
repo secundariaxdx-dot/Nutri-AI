@@ -33,6 +33,8 @@ export class AIError extends Error {
 export function redactSecrets(text: string): string {
   return text
     .replace(/AIza[0-9A-Za-z_-]{20,}/g, 'AIza…[oculto]')
+    // Formato nuevo de claves de Google AI Studio (AQ.…)
+    .replace(/\bAQ\.[0-9A-Za-z_-]{20,}/g, 'AQ.…[oculto]')
     .replace(/((?:^|[?&\s])(?:key|api-key|api_key)=)[^&\s]+/gi, '$1[oculto]')
     .replace(/\b(sk-|sb_secret_)[0-9A-Za-z_-]{10,}/g, '$1…[oculto]')
     .replace(/\b[0-9a-f]{32}\b/gi, '[oculto]');

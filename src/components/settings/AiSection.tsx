@@ -180,7 +180,7 @@ function GeminiSettings({ settings }: { settings: AppSettings }) {
         </p>
       </div>
 
-      <SecretInput id="gkey" label="Clave de API de Google AI Studio" value={settings.geminiApiKey} placeholder="AIza…" onSave={(v) => setSettings({ geminiApiKey: v })} />
+      <SecretInput id="gkey" label="Clave de API de Google AI Studio" value={settings.geminiApiKey} placeholder="Pega aquí tu clave" onSave={(v) => setSettings({ geminiApiKey: v })} />
       <ConnectionTest settings={settings} />
 
       <details className="rounded-2xl bg-white p-4 text-sm text-ink-700 ring-1 ring-ink-100">
