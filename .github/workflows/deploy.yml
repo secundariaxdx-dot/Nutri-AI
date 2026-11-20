@@ -29,6 +29,10 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci
+        env:
+          # La app usa ONNX solo en el navegador; no hace falta el binario de GPU de Node
+          # (su descarga devuelve 404 y rompe la instalación).
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
       - name: Pruebas automatizadas
         run: npm test
