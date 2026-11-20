@@ -28,22 +28,22 @@ export const GEMINI_MODELS: GeminiModelOption[] = [
   {
     id: 'gemini-4-hydrogen',
     label: 'Gemini 4 Hydrogen (recomendado)',
-    note: 'El modelo más capaz con nivel gratuito. Mejor comprensión de platos mezclados.',
-    thinkingLevel: 'medium',
+    note: 'El modelo más capaz con nivel gratuito. Mejor comprensión de platos mezclados, pero puede tardar más.',
+    thinkingLevel: 'low',
     freeTierVerified: '2026-11-20',
   },
   {
     id: 'gemini-3.8-flash',
     label: 'Gemini 3.8 Flash',
-    note: 'Alternativa estable y rápida si Hydrogen no tiene cuota gratuita en tu proyecto.',
-    thinkingLevel: 'medium',
+    note: 'Alternativa estable y más rápida si Hydrogen tarda demasiado o no tiene cuota gratuita en tu proyecto.',
+    thinkingLevel: 'low',
     freeTierVerified: '2026-11-20',
   },
   {
     id: 'gemini-3.6-flash',
     label: 'Gemini 3.6 Flash',
     note: 'Generación anterior de Flash.',
-    thinkingLevel: 'medium',
+    thinkingLevel: 'low',
     freeTierVerified: '2026-11-20',
   },
   {

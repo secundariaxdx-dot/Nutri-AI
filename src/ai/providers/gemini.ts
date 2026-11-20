@@ -18,7 +18,7 @@ import { AIError, QUOTA_MESSAGE, nextPacificMidnight, redactSecrets } from './er
 import type { AIProvider, AnalyzeOptions, ProviderStatus, VisionAnalysis } from './types';
 
 export const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const TIMEOUT_MS = 60_000;
+const TIMEOUT_MS = 120_000;
 
 interface GoogleErrorBody {
   error?: {
@@ -103,7 +103,7 @@ export class GeminiProvider implements AIProvider {
       return await this.fetchImpl(url, { ...init, signal: ctrl.signal, headers: { ...(init.headers ?? {}), 'x-goog-api-key': this.apiKey.trim() } });
     } catch (e) {
       if (signal?.aborted) throw new AIError('aborted', 'Análisis cancelado.');
-      if ((e as Error)?.name === 'AbortError') throw new AIError('timeout', 'Gemini ha tardado demasiado en responder. Reinténtalo.', { retryable: true });
+      if ((e as Error)?.name === 'AbortError') throw new AIError('timeout', 'Gemini ha tardado más de 2 minutos en responder (la petición puede contar en tu cuota). Reinténtalo o prueba otro modelo más rápido en Ajustes, como Gemini 3.8 Flash.', { retryable: true });
       throw new AIError('network', 'No se pudo conectar con Gemini. Comprueba tu conexión.', { retryable: true });
     } finally {
       clearTimeout(timer);
