@@ -43,6 +43,7 @@ export type Preparation =
   | 'frito'
   | 'horneado'
   | 'asado'
+  | 'tostado'
   | 'natural'
   | 'procesado';
 
@@ -116,6 +117,12 @@ export interface MealItem {
   confidence?: number;
   /** Nombre del plato del que procede (desglose de recetas). */
   fromDish?: string;
+  /** Nombre con el que lo describió la IA (si difiere del de la base de datos). */
+  aiName?: string;
+  /** true si la IA no pudo confirmar la preparación (crudo, frito…). */
+  preparationUnconfirmed?: boolean;
+  /** true si la cantidad es una ración por defecto (la IA no dio gramos). */
+  defaultQuantity?: boolean;
 }
 
 export type MealType = 'desayuno' | 'media-manana' | 'comida' | 'merienda' | 'cena' | 'otros';

@@ -18,12 +18,14 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onPick: (food: Food, grams: number) => void;
+  /** Texto con el que empezar la búsqueda (p. ej. un alimento detectado sin datos). */
+  initialQuery?: string;
 }
 
 const CATEGORIES: FoodCategory[] = ['carnes', 'pescados', 'huevos', 'cereales', 'legumbres', 'verduras', 'frutas', 'lacteos', 'frutos-secos', 'grasas', 'salsas', 'dulces', 'bebidas', 'platos'];
 
 /** Buscador de alimentos: base local + mis alimentos + Open Food Facts + USDA. */
-export function FoodPicker({ open, onClose, onPick }: Props) {
+export function FoodPicker({ open, onClose, onPick, initialQuery }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<FoodSearchResult[]>([]);
   const [online, setOnlineResults] = useState<FoodSearchResult[] | null>(null);
@@ -40,14 +42,14 @@ export function FoodPicker({ open, onClose, onPick }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    setQuery('');
+    setQuery(initialQuery ?? '');
     setSelected(null);
     setCategory(null);
     setOnlineResults(null);
     setOnlineError(undefined);
     getRecentFoods(10).then(setRecent);
     setTimeout(() => input.current?.focus(), 150);
-  }, [open]);
+  }, [open, initialQuery]);
 
   useEffect(() => {
     let alive = true;

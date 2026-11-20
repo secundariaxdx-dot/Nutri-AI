@@ -1,8 +1,9 @@
 # 🥗 NUTRI AI
 
-**Diario nutricional inteligente, gratuito y privado.** Fotografía tu comida, la inteligencia artificial identifica los alimentos **en tu propio dispositivo**, propone cantidades orientativas y calcula calorías, macronutrientes y micronutrientes con datos de fuentes públicas identificables.
+**Diario nutricional inteligente, gratuito y privado.** Fotografía tu comida, la inteligencia artificial identifica los alimentos (con **Google Gemini** usando tu cuota gratuita, o con un modelo **local** sin conexión), propone cantidades orientativas y calcula calorías, macronutrientes y micronutrientes con datos de fuentes públicas identificables. La IA nunca inventa los nutrientes.
 
-- 📸 Análisis de fotos con IA local (sin enviar imágenes a ningún servidor)
+- 📸 Análisis de fotos con IA: Google Gemini (multimodal, nivel gratuito) o modelo local en el dispositivo
+- 🛡️ Control de cuota: contadores, límites personales, avisos al 80 % / 100 % y sin costes inesperados
 - 🔎 Buscador de alimentos: base local + Open Food Facts + USDA FoodData Central
 - 🏷️ Escáner de códigos de barras (EAN/UPC) con Open Food Facts
 - 📓 Diario por días con calendario, edición, duplicado y eliminación
@@ -19,17 +20,18 @@
 
 1. [Tecnologías](#tecnologías)
 2. [Instalación y ejecución](#instalación-y-ejecución)
-3. [Cómo funciona el análisis de imágenes](#cómo-funciona-el-análisis-de-imágenes)
-4. [Datos nutricionales](#datos-nutricionales)
-5. [Servicios gratuitos utilizados](#servicios-gratuitos-utilizados)
-6. [Despliegue en GitHub Pages](#despliegue-en-github-pages)
-7. [Alternativa: Cloudflare Pages](#alternativa-cloudflare-pages)
-8. [Instalar en iPhone](#instalar-en-iphone)
-9. [Sincronización opcional con Supabase](#sincronización-opcional-con-supabase)
-10. [Privacidad](#privacidad)
-11. [Limitaciones de la inteligencia artificial](#limitaciones-de-la-inteligencia-artificial)
-12. [Estructura del proyecto](#estructura-del-proyecto)
-13. [Pruebas](#pruebas)
+3. [Análisis de fotos con Google Gemini](#análisis-de-fotos-con-google-gemini)
+4. [Modelo local (alternativa sin conexión)](#cómo-funciona-el-análisis-de-imágenes)
+5. [Datos nutricionales](#datos-nutricionales)
+6. [Servicios gratuitos utilizados](#servicios-gratuitos-utilizados)
+7. [Despliegue en GitHub Pages](#despliegue-en-github-pages)
+8. [Alternativa: Cloudflare Pages](#alternativa-cloudflare-pages)
+9. [Instalar en iPhone](#instalar-en-iphone)
+10. [Sincronización opcional con Supabase](#sincronización-opcional-con-supabase)
+11. [Privacidad](#privacidad)
+12. [Limitaciones de la inteligencia artificial](#limitaciones-de-la-inteligencia-artificial)
+13. [Estructura del proyecto](#estructura-del-proyecto)
+14. [Pruebas](#pruebas)
 
 ---
 
@@ -84,7 +86,69 @@ Copia `.env.example` a `.env.local` si quieres preconfigurar algo:
 
 **No hay claves secretas en el código.** La clave “anon/publishable” de Supabase es pública por diseño; la app rechaza explícitamente las claves `service_role`/`secret`.
 
-## Cómo funciona el análisis de imágenes
+## Análisis de fotos con Google Gemini
+
+Desde la versión 1.1, el proveedor recomendado es **Google Gemini** (modelo multimodal: entiende la foto completa, cuenta piezas y describe la preparación cuando se ve). El modelo local anterior sigue disponible como alternativa sin conexión.
+
+### Cómo funciona
+
+1. Haces la foto y pulsas **Analizar con IA** (nunca se envía nada sin ese gesto).
+2. La foto (reducida a ≤1280 px) se envía a Gemini con una instrucción especializada: identificar **solo** lo que se ve, no inventar ingredientes ni preparaciones, separar hipótesis (p. ej. aceite) de lo observado y estimar gramos de forma conservadora.
+3. Gemini responde con **JSON estructurado** (`responseJsonSchema`), que la app valida con **Zod**. Si el JSON no es válido se intenta una recuperación controlada (extraer el JSON, números escritos como texto, descartar elementos inválidos con aviso); si no es recuperable se muestra un error y **no se guarda nada**.
+4. Cada alimento se cruza con la **base de datos** (USDA / Open Food Facts / tus alimentos). Los nutrientes salen siempre de ahí, por 100 g. Si un alimento no tiene coincidencia fiable, se muestra «sin datos» con un botón **Buscar**: no se inventan valores.
+5. Pantalla de revisión: foto, descripción, dudas de la IA, alimentos con gramos y confianza, posibles ingredientes no confirmados (se añaden con un toque), calorías, macros y micronutrientes. Puedes cambiar gramos, **cambiar la preparación** (p. ej. huevo cocido → frito), añadir o quitar alimentos. **Nunca se guarda automáticamente.**
+
+Si la preparación no se distingue en la foto, se usa la variante sin grasa añadida y se marca **«Preparación sin confirmar»**.
+
+### Modelo elegido y nivel gratuito (consultado el 20/11/2026 en la documentación oficial)
+
+| Modelo | Imágenes | Nivel gratuito | Estado |
+|---|---|---|---|
+| **`gemini-4-hydrogen`** (por defecto) | Sí | Sí («Free of charge») | Estable |
+| `gemini-3.8-flash` | Sí | Sí | Estable |
+| `gemini-3.6-flash` | Sí | Sí | Estable |
+| `gemini-3.5-flash-lite` | Sí | Sí | Estable |
+| `gemini-3.1-flash-lite` | Sí | Sí | Estable |
+
+Los Gemini 4 Carbon, Argon y Neon **no** tienen nivel gratuito y no se ofrecen. `gemini-2.5-flash` está obsoleto.
+Se elige **Gemini 4 Hydrogen** porque es el modelo más capaz con nivel gratuito; si en tu proyecto no tuviera cuota gratuita, la app lo detecta (error 429 con límite 0) y te pide elegir otro en Ajustes.
+
+**Límites oficiales:** la documentación actual **no publica** las cifras del nivel gratuito (RPM / RPD); indica que se consultan por proyecto en [AI Studio › Rate limit](https://aistudio.google.com/rate-limit), que se aplican **por proyecto** (no por clave), que el límite diario se reinicia a **medianoche del Pacífico** (09:00 en España en invierno) y que **no están garantizados**. Por eso Nutri AI no inventa esos números: puedes copiar tu RPD en Ajustes.
+
+**Límites personales por defecto:** 10 análisis/día y 150/mes, aviso al 80 %, bloqueo al 100 % (configurables). Tu uso previsto (3–4 fotos/día, 90–120/mes) cabe holgadamente en esos límites; que quepa también en la cuota gratuita de Google depende del RPD que AI Studio muestre para tu proyecto.
+
+### Activarlo (gratis, sin tarjeta)
+
+1. Entra en [aistudio.google.com/apikey](https://aistudio.google.com/apikey) y crea una clave.
+2. **No vincules facturación** al proyecto. Sin facturación el proyecto se queda en el nivel gratuito y no puede generar cargos.
+3. Restringe la clave a **Gemini API** (AI Studio › tu clave › *Add restrictions* › *Restrict to Gemini API only*): Google rechaza las claves estándar sin restricciones.
+4. En Nutri AI: **Ajustes › Inteligencia artificial** › Google Gemini › pega la clave › **Validar conexión** (no gasta cuota de análisis) › lee y acepta las condiciones.
+
+No hace falta backend: Google permite llamadas desde el navegador (CORS comprobado desde `secundariaxdx-dot.github.io`). La clave se guarda solo en tu navegador (IndexedDB): no está en el repositorio, ni en copias de seguridad, ni en la sincronización, ni en los registros. **Esto es adecuado para uso personal, no para una app pública con varios usuarios** (necesitaría un servidor intermedio que guarde la clave).
+
+### Seguridad de costes
+
+- La app no activa facturación, no cambia de modelo ni de proveedor automáticamente y no hace reintentos automáticos (una foto = una petición).
+- Solo se listan modelos con nivel gratuito.
+- Si se agota la cuota: *«Has alcanzado el límite gratuito de análisis de inteligencia artificial. Puedes volver a intentarlo cuando se restablezca tu cuota o introducir los alimentos manualmente.»* Se ofrecen **Reintentar**, **Cambiar proveedor** y **Añadir manualmente**. El diario, la búsqueda, los cálculos y las estadísticas siguen funcionando.
+
+### Condiciones y privacidad (léelas)
+
+Según las [condiciones adicionales de Gemini API](https://ai.google.dev/gemini-api/terms):
+
+- En el **nivel gratuito**, Google usa lo que envías (fotos y respuestas) para mejorar sus productos y **personas revisoras pueden leerlo**. No envíes información sensible o personal: no fotografíes caras, documentos ni pantallas.
+- Hay que tener **18 años o más**, y el servicio está pensado para desarrolladores.
+- **Importante para España:** las condiciones dicen que solo pueden usarse servicios de pago al ofrecer aplicaciones a usuarios del Espacio Económico Europeo, Suiza o Reino Unido. No está claro cómo se aplica a una app personal que solo usas tú: revísalo y decide. Si no te convence, usa el modelo local o el modo manual (gratis y sin enviar fotos).
+
+### Azure for Students (alternativa experimental)
+
+Azure for Students ofrece **100 USD de crédito durante 12 meses**, sin tarjeta y renovable mientras seas estudiante; al agotarse, la suscripción se deshabilita salvo que pases a pago por uso. Los modelos de visión de Azure OpenAI **consumen ese crédito**: no es gratuito de forma permanente. Azure AI Vision tiene un nivel gratuito, pero es un etiquetador genérico, no un modelo que entienda platos. Por eso Azure OpenAI se incluye solo como **proveedor experimental** opcional: desactivado por defecto, exige confirmar que consume crédito, nunca se usa como respaldo y **no se ha podido probar contra un recurso real**. Una cuenta por estudiante.
+
+## Modelo local (alternativa sin conexión)
+
+> Antes de la versión 1.1 era el único sistema. Es un **clasificador de etiquetas** (*zero-shot*), no un modelo multimodal: no cuenta piezas, no distingue la preparación y puede confundir platos parecidos. Se mantiene como opción privada y sin cuota.
+
+### Cómo funciona el análisis de imágenes
 
 1. **Captura**: en iPhone, «Hacer foto» abre la cámara nativa (`<input capture>`); «Elegir de la galería» abre las fotos. La imagen se reduce a 1280 px y se genera una miniatura.
 2. **Modelo local**: se descarga una única vez el codificador de imagen de **MobileCLIP-S0** (≈23 MB, en `fp16`) desde Hugging Face y queda en la caché del navegador. A partir de ahí **funciona sin conexión**. Se ejecuta en un *Web Worker* con WebAssembly para no bloquear la interfaz.
@@ -129,7 +193,8 @@ npm run build:foods
 
 | Servicio | Para qué | Coste | Registro |
 |---|---|---|---|
-| Hugging Face Hub | Descarga única del modelo de IA | Gratis | No |
+| Google Gemini API (AI Studio) | Análisis de fotos (proveedor recomendado) | Nivel gratuito con límites por proyecto, no garantizados | Cuenta de Google y clave; **sin** facturación |
+| Hugging Face Hub | Descarga única del modelo de IA local | Gratis | No |
 | jsDelivr / propia web | Runtime ONNX WebAssembly | Gratis | No |
 | Open Food Facts | Productos y códigos de barras | Gratis (datos abiertos ODbL) | No |
 | USDA FoodData Central | Búsqueda ampliada | Gratis | Opcional: [clave gratuita sin tarjeta](https://fdc.nal.usda.gov/api-key-signup) (sin ella se usa `DEMO_KEY`, muy limitada) |
@@ -194,7 +259,7 @@ Alternativamente, define `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` como *Re
 
 ## Privacidad
 
-- Las fotos se analizan **en el dispositivo**; nunca se envían a terceros.
+- Con el modelo local o el modo manual, las fotos no salen del dispositivo. Con Gemini (o Azure), la foto se envía a ese proveedor solo al pulsar «Analizar con IA» (ver condiciones arriba).
 - Solo se contacta con Open Food Facts/USDA para buscar un código o texto, sin datos personales.
 - Sin publicidad, analíticas ni rastreo. Sin venta de datos.
 - Todos los datos del perfil son opcionales.
@@ -203,6 +268,8 @@ Alternativamente, define `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` como *Re
 ## Limitaciones de la inteligencia artificial
 
 Es importante entenderlas:
+
+- **Con Gemini**: es mucho más fiable que el modelo local, pero puede equivocarse, sobre todo con ingredientes ocultos, salsas, aceite y platos mezclados. **No se ha medido su precisión con fotos reales** en este proyecto (no había clave disponible durante el desarrollo): pruébalo con tus platos y revisa siempre el resultado. La cuota gratuita puede cambiar o agotarse.
 
 - **Las cantidades son estimaciones.** Una foto normal no permite medir peso ni volumen. La app propone raciones típicas ajustadas por el área aparente; revísalas siempre (mejor con una báscula).
 - **Reconocimiento *zero-shot* con un vocabulario cerrado** de ~200 alimentos y platos. Lo que no esté en el catálogo se aproximará al más parecido o no se detectará: añádelo manualmente.
@@ -240,7 +307,7 @@ public/ai/           Embeddings precalculados de las etiquetas
 npm test
 ```
 
-55 pruebas automatizadas cubren: escalado y suma de nutrientes (incluido «sin datos» y totales parciales), base de datos local (crudo vs. cocinado, fuentes, búsqueda), fórmulas de energía y objetivos, estadísticas y fechas, operaciones de comidas en IndexedDB (guardar, editar, validar, eliminar/deshacer, duplicar, separación por días), perfil, alimentos personalizados, copias de seguridad, motor de sincronización (subida, descarga, sin duplicados, conflictos, borrados, fotos, perfil) con un servidor simulado, lógica de detección de la IA, y conversión de datos de Open Food Facts y USDA.
+79 pruebas automatizadas cubren, además del sistema de visión (14 escenarios con respuestas **simuladas** de Gemini, más la respuesta **real** de Google ante una clave no válida; validación con Zod, recuperación de JSON, cruce con la base de datos, límites, cuota, red, modelo no disponible, migración no destructiva de la base de datos): escalado y suma de nutrientes (incluido «sin datos» y totales parciales), base de datos local (crudo vs. cocinado, fuentes, búsqueda), fórmulas de energía y objetivos, estadísticas y fechas, operaciones de comidas en IndexedDB (guardar, editar, validar, eliminar/deshacer, duplicar, separación por días), perfil, alimentos personalizados, copias de seguridad, motor de sincronización (subida, descarga, sin duplicados, conflictos, borrados, fotos, perfil) con un servidor simulado, lógica de detección de la IA, y conversión de datos de Open Food Facts y USDA.
 
 ---
 

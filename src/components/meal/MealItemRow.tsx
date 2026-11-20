@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
-import { AlertTriangle, ChevronDown, Minus, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { AlertTriangle, ChevronDown, HelpCircle, Minus, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { variantsOf } from '@/ai/vision/variants';
 import { PREPARATION_LABEL } from '@/config/app';
 import { formatKcal } from '@/lib/format';
 import { itemNutrients } from '@/lib/nutrition';
@@ -23,6 +24,7 @@ function stepFor(g: number) {
 export const MealItemRow = memo(function MealItemRow({ item, editable, onChange, onRemove }: Props) {
   const [open, setOpen] = useState(false);
   const n = itemNutrients(item);
+  const variants = variantsOf(item.foodId);
 
   return (
     <li className="animate-fade-in rounded-3xl bg-white p-4 ring-1 ring-ink-100">
@@ -49,8 +51,35 @@ export const MealItemRow = memo(function MealItemRow({ item, editable, onChange,
               </span>
             )}
             {item.fromDish && <span className="chip bg-violet-50 text-violet-700">De: {item.fromDish}</span>}
+            {item.preparationUnconfirmed && (
+              <span className="chip bg-amber-50 text-amber-700" title="La IA no pudo distinguir cómo está cocinado">
+                <HelpCircle className="h-3 w-3" /> Preparación sin confirmar
+              </span>
+            )}
+            {item.defaultQuantity && <span className="chip bg-amber-50 text-amber-700">Cantidad por defecto</span>}
           </div>
+          {item.aiName && <p className="mt-1 text-xs text-ink-400">Detectado como «{item.aiName}»</p>}
           <MacroPills n={n} className="mt-2" />
+          {editable && variants.length > 1 && (
+            <label className="mt-2 flex items-center gap-2 text-xs text-ink-500">
+              Preparación / tipo
+              <select
+                className="rounded-xl border-0 bg-ink-50 py-1.5 pl-2 pr-7 text-sm text-ink-800 ring-1 ring-ink-200"
+                value={item.foodId}
+                aria-label={`Preparación de ${item.name}`}
+                onChange={(e) => {
+                  const f = variants.find((v) => v.id === e.target.value);
+                  if (f) onChange?.({ foodId: f.id, name: f.name, per100g: { ...f.nutrients }, source: f.source, preparation: f.preparation, preparationUnconfirmed: false });
+                }}
+              >
+                {variants.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
       </div>
 
@@ -60,13 +89,13 @@ export const MealItemRow = memo(function MealItemRow({ item, editable, onChange,
             <button
               aria-label={`Reducir cantidad de ${item.name}`}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ink-100 text-ink-700 active:scale-95"
-              onClick={() => onChange?.({ grams: Math.max(1, item.grams - stepFor(item.grams)), estimated: false })}
+              onClick={() => onChange?.({ grams: Math.max(1, item.grams - stepFor(item.grams)), estimated: false, defaultQuantity: false })}
             >
               <Minus className="h-4 w-4" />
             </button>
             <NumberInput
               value={item.grams}
-              onChange={(v) => v !== undefined && v > 0 && onChange?.({ grams: v, estimated: false })}
+              onChange={(v) => v !== undefined && v > 0 && onChange?.({ grams: v, estimated: false, defaultQuantity: false })}
               min={1}
               max={5000}
               suffix="g"
@@ -77,7 +106,7 @@ export const MealItemRow = memo(function MealItemRow({ item, editable, onChange,
             <button
               aria-label={`Aumentar cantidad de ${item.name}`}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ink-100 text-ink-700 active:scale-95"
-              onClick={() => onChange?.({ grams: item.grams + stepFor(item.grams), estimated: false })}
+              onClick={() => onChange?.({ grams: item.grams + stepFor(item.grams), estimated: false, defaultQuantity: false })}
             >
               <Plus className="h-4 w-4" />
             </button>

@@ -1,7 +1,7 @@
 import type { ActivityLevel, FoodCategory, GoalType, MealType, Preparation, Sex } from '@/types';
 
 export const APP_NAME = 'Nutri AI';
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
 
 export const MEAL_TYPES: { value: MealType; label: string; emoji: string }[] = [
   { value: 'desayuno', label: 'Desayuno', emoji: '☀️' },
@@ -34,6 +34,7 @@ export const PREPARATION_LABEL: Record<Preparation, string> = {
   frito: 'Frito',
   horneado: 'Horneado',
   asado: 'Asado',
+  tostado: 'Tostado',
   natural: 'Natural',
   procesado: 'Procesado',
 };

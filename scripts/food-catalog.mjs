@@ -10,7 +10,7 @@
  *  - name: nombre visible en español
  *  - aliases: términos de búsqueda adicionales
  *  - cat: categoría
- *  - prep: crudo | cocido | plancha | frito | horneado | asado | natural | procesado
+ *  - prep: crudo | cocido | plancha | frito | horneado | asado | tostado | natural | procesado
  *  - fdc: FDC ID de USDA (SR Legacy)
  *  - portion: ración orientativa en gramos (se usa para estimar cantidades en fotos)
  *  - vision: descripciones en inglés usadas por el modelo de visión (zero-shot).
@@ -86,6 +86,10 @@ export const CATALOG = [
   { id: 'pasta-cocida', name: 'Pasta cocida', aliases: ['macarrones', 'espaguetis', 'fideos', 'tallarines'], cat: 'cereales', prep: 'cocido', fdc: 169737, portion: 200, vision: ['plain cooked pasta', 'spaghetti', 'penne pasta'] },
   { id: 'pan-blanco', name: 'Pan blanco de molde', aliases: ['pan de molde', 'tostada'], cat: 'cereales', prep: 'horneado', fdc: 174924, portion: 50, vision: ['slice of white bread', 'toast'] },
   { id: 'pan-barra', name: 'Pan de barra / baguette', aliases: ['pan', 'bocadillo', 'chapata'], cat: 'cereales', prep: 'horneado', fdc: 172675, portion: 60, vision: ['baguette bread'] },
+  { id: 'pan-payes', name: 'Pan de payés / pan rústico', aliases: ['pan de pages', 'pan de payes', 'pan rustico', 'pan de pueblo', 'hogaza', 'pan de masa madre'], cat: 'cereales', prep: 'horneado', fdc: 172675, portion: 60 },
+  { id: 'pan-payes-tostado', name: 'Tostada de pan de payés / rústico', aliases: ['tostada', 'pan tostado', 'pan de payes tostado', 'pan de pages tostado'], cat: 'cereales', prep: 'tostado', fdc: 174911, portion: 55 },
+  { id: 'pan-molde-tostado', name: 'Tostada de pan de molde', aliases: ['tostada', 'pan tostado', 'pan de molde tostado'], cat: 'cereales', prep: 'tostado', fdc: 174925, portion: 25 },
+  { id: 'pan-integral-tostado', name: 'Tostada de pan integral', aliases: ['tostada integral', 'pan integral tostado'], cat: 'cereales', prep: 'tostado', fdc: 172689, portion: 30 },
   { id: 'pan-integral', name: 'Pan integral', aliases: ['pan'], cat: 'cereales', prep: 'horneado', fdc: 172688, portion: 50, vision: ['whole wheat bread'] },
   { id: 'pan-centeno', name: 'Pan de centeno', aliases: ['pan'], cat: 'cereales', prep: 'horneado', fdc: 172684, portion: 50 },
   { id: 'pan-pita', name: 'Pan de pita', aliases: ['pita'], cat: 'cereales', prep: 'horneado', fdc: 174915, portion: 60 },

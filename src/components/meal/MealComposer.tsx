@@ -24,13 +24,15 @@ interface Props {
   /** Abre el buscador nada más montar (registro manual). */
   openPickerOnMount?: boolean;
   saveLabel?: string;
+  /** Alimentos que la pantalla contenedora quiere añadir (p. ej. sugerencias de la IA). */
+  appendRequest?: { id: number; items: MealItem[] };
 }
 
 /**
  * Editor de comidas compartido por todos los flujos (foto, manual, código de
  * barras y edición). Recalcula los nutrientes en cada cambio.
  */
-export function MealComposer({ initial, initialMode = 'edit', header, onReanalyze, onSaved, openPickerOnMount, saveLabel = 'Guardar en mi diario' }: Props) {
+export function MealComposer({ initial, initialMode = 'edit', header, onReanalyze, onSaved, openPickerOnMount, saveLabel = 'Guardar en mi diario', appendRequest }: Props) {
   const [draft, setDraft] = useState<MealDraft>(initial);
   const [mode, setMode] = useState(initialMode);
   const [picker, setPicker] = useState(!!openPickerOnMount);
@@ -49,6 +51,11 @@ export function MealComposer({ initial, initialMode = 'edit', header, onReanalyz
     },
     [],
   );
+
+  useEffect(() => {
+    if (appendRequest?.items.length) setDraft((d) => ({ ...d, items: [...d.items, ...appendRequest.items] }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appendRequest?.id]);
 
   const totals = useMemo(() => itemsTotals(draft.items), [draft.items]);
 

@@ -142,8 +142,8 @@ export async function importBackup(backup: Backup, mode: 'merge' | 'replace'): P
 
 /** Elimina TODOS los datos locales (comidas, perfil, alimentos, ajustes). */
 export async function wipeAllData() {
-  await db.transaction('rw', [db.meals, db.profile, db.customFoods, db.weights, db.settings, db.recentFoods], async () => {
-    await Promise.all([db.meals.clear(), db.profile.clear(), db.customFoods.clear(), db.weights.clear(), db.settings.clear(), db.recentFoods.clear()]);
+  await db.transaction('rw', [db.meals, db.profile, db.customFoods, db.weights, db.settings, db.recentFoods, db.aiUsage], async () => {
+    await Promise.all([db.meals.clear(), db.profile.clear(), db.customFoods.clear(), db.weights.clear(), db.settings.clear(), db.recentFoods.clear(), db.aiUsage.clear()]);
   });
   try {
     if ('caches' in self) await caches.delete('transformers-cache');
